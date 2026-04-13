@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THEOREM — Evolving STEM NFTs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+
+  :root {
+    --dormant-primary: #1a0a2e;
+    --dormant-accent: #4a1070;
+    --dormant-glow: #7b2d8b;
+    --solving-primary: #0a1a2e;
+    --solving-accent: #0d4f8c;
+    --solving-glow: #00aaff;
+    --solved-primary: #001a1a;
+    --solved-accent: #00ffcc;
+    --solved-glow: #00ffcc;
+    --ui-bg: #050510;
+    --ui-border: rgba(100,80,200,0.3);
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-display: 'Orbitron', monospace;
+    --font-body: 'Rajdhani', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #02020f;
+    color: #ccc;
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Starfield bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 50%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(2px 2px at 10% 60%, rgba(100,100,255,0.3) 0%, transparent 100%),
+      radial-gradient(2px 2px at 90% 70%, rgba(100,200,255,0.2) 0%, transparent 100%),
+      #02020f;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 40px 20px 20px;
+    border-bottom: 1px solid rgba(100,80,200,0.2);
+  }
+
+  .header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    background: linear-gradient(135deg, #9b30ff, #00aaff, #00ffcc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    margin-bottom: 8px;
+  }
+
+  .header .subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    color: rgba(150,120,220,0.7);
+  }
+
+  .stage-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin: 30px auto;
+    max-width: 600px;
+    position: relative;
+    z-index: 10;
+    border: 1px solid rgba(100,80,200,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .stage-btn {
+    flex: 1;
+    padding: 12px 8px;
+    background: rgba(10,5,30,0.8);
+    border: none;
+    color: rgba(150,130,200,0.6);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-right: 1px solid rgba(100,80,200,0.3);
+    text-transform: uppercase;
+  }
+  .stage-btn:last-child { border-right: none; }
+  .stage-btn.active {
+    background: rgba(100,50,200,0.25);
+    color: #fff;
+  }
+  .stage-btn:hover { background: rgba(100,50,200,0.15); color: #ddd; }
+
+  /* Domain tabs */
+  .domain-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 0 20px 30px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 10;
+  }
+
+  .domain-tab {
+    padding: 8px 20px;
+    background: rgba(10,5,30,0.8);
+    border: 1px solid rgba(80,60,160,0.4);
+    border-radius: 3px;
+    color: rgba(150,130,200,0.6);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+  }
+  .domain-tab.active {
+    border-color: var(--solving-glow);
+    color: var(--solving-glow);
+    box-shadow: 0 0 12px rgba(0,170,255,0.3);
+  }
+  .domain-tab:hover {
+    border-color: rgba(100,180,255,0.5);
+    color: rgba(200,220,255,0.9);
+  }
+
+  /* NFT Canvas */
+  .nft-container {
+    position: relative;
+    z-index: 10;
+    max-width: 680px;
+    margin: 0 auto 30px;
+    padding: 0 20px;
+  }
+
+  .nft-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    background: #030318;
+    border: 1px solid rgba(80,60,160,0.5);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* Corner decorations */
+  .nft-frame::before, .nft-frame::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    z-index: 20;
+    pointer-events: none;
+  }
+  .nft-frame::before {
+    top: 0; left: 0;
+    border-top: 2px solid;
+    border-left: 2px solid;
+    border-color: var(--glow-color, #7b2d8b);
+    box-shadow: -2px -2px 8px var(--glow-color, #7b2d8b);
+  }
+  .nft-frame::after {
+    bottom: 0; right: 0;
+    border-bottom: 2px solid;
+    border-right: 2px solid;
+    border-color: var(--glow-color, #7b2d8b);
+    box-shadow: 2px 2px 8px var(--glow-color, #7b2d8b);
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* HUD overlay */
+  .hud-tl, .hud-tr, .hud-bl, .hud-br {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: rgba(150,130,200,0.5);
+    pointer-events: none;
+    z-index: 21;
+  }
+  .hud-tl { top: 14px; left: 14px; }
+  .hud-tr { top: 14px; right: 14px; text-align: right; }
+  .hud-bl { bottom: 14px; left: 14px; }
+  .hud-br { bottom: 14px; right: 14px; text-align: right; }
+
+  .hud-stage-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 5vw, 3rem);
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    pointer-events: none;
+    z-index: 22;
+    transition: all 1s;
+    text-align: center;
+  }
+
+  /* Info panel */
+  .info-panel {
+    position: relative;
+    z-index: 10;
+    max-width: 680px;
+    margin: 0 auto 20px;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .info-card {
+    background: rgba(10,5,30,0.8);
+    border: 1px solid rgba(80,60,160,0.3);
+    border-radius: 4px;
+    padding: 14px;
+    text-align: center;
+  }
+  .info-card .label {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: rgba(150,130,200,0.5);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .info-card .value {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .info-card .value.glow { color: var(--solving-glow); text-shadow: 0 0 10px var(--solving-glow); }
+
+  /* Problem panel */
+  .problem-panel {
+    position: relative;
+    z-index: 10;
+    max-width: 680px;
+    margin: 0 auto 30px;
+    padding: 0 20px;
+  }
+
+  .problem-box {
+    background: rgba(5,5,25,0.9);
+    border: 1px solid rgba(80,60,160,0.4);
+    border-radius: 6px;
+    padding: 24px;
+  }
+
+  .problem-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: rgba(150,130,200,0.5);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .problem-text {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: rgba(200,200,230,0.8);
+    margin-bottom: 20px;
+    min-height: 60px;
+  }
+
+  .answer-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .answer-input {
+    flex: 1;
+    background: rgba(10,5,40,0.8);
+    border: 1px solid rgba(80,60,180,0.5);
+    border-radius: 3px;
+    padding: 10px 14px;
+    color: #e0d8ff;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .answer-input:focus {
+    border-color: var(--solving-glow);
+    box-shadow: 0 0 10px rgba(0,170,255,0.2);
+  }
+
+  .submit-btn {
+    padding: 10px 24px;
+    background: transparent;
+    border: 1px solid var(--solving-glow);
+    color: var(--solving-glow);
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.3s;
+  }
+  .submit-btn:hover {
+    background: rgba(0,170,255,0.15);
+    box-shadow: 0 0 15px rgba(0,170,255,0.3);
+  }
+
+  .feedback {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    min-height: 20px;
+    letter-spacing: 0.1em;
+    transition: all 0.3s;
+  }
+  .feedback.wrong { color: #ff4466; }
+  .feedback.right { color: var(--solved-glow); text-shadow: 0 0 8px var(--solved-glow); }
+
+  /* Hints */
+  .hint-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .hint-pill {
+    background: rgba(80,40,160,0.2);
+    border: 1px solid rgba(100,60,200,0.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: rgba(180,160,230,0.6);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .hint-pill:hover {
+    background: rgba(80,40,160,0.4);
+    color: #bbb;
+  }
+
+  .hint-text {
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: rgba(180,160,230,0.6);
+    min-height: 18px;
+    font-style: italic;
+  }
+
+  /* Traits */
+  .traits-panel {
+    position: relative;
+    z-index: 10;
+    max-width: 680px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+  }
+
+  .traits-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .trait-card {
+    background: rgba(10,5,30,0.7);
+    border: 1px solid rgba(60,40,120,0.4);
+    border-radius: 4px;
+    padding: 10px;
+    text-align: center;
+  }
+  .trait-card .t-label {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    color: rgba(120,100,180,0.5);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .trait-card .t-value {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(200,190,230,0.8);
+  }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .info-panel { grid-template-columns: 1fr 1fr; }
+    .traits-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Glitch animation */
+  @keyframes glitch {
+    0%, 90%, 100% { clip-path: none; transform: translate(0); }
+    92% { clip-path: polygon(0 20%, 100% 20%, 100% 30%, 0 30%); transform: translate(-4px, 0); }
+    94% { clip-path: polygon(0 60%, 100% 60%, 100% 70%, 0 70%); transform: translate(4px, 0); }
+    96% { clip-path: polygon(0 40%, 100% 40%, 100% 50%, 0 50%); transform: translate(-2px, 0); }
+  }
+
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  .scanline {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(transparent, rgba(0,170,255,0.05), transparent);
+    pointer-events: none;
+    z-index: 1000;
+    animation: scanline 6s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div class="header">
+  <h1>THEOREM</h1>
+  <div class="subtitle">// EVOLVING STEM NFT COLLECTION · ETHEREUM · GEN-1 //</div>
+</div>
+
+<!-- Stage selector -->
+<div class="stage-bar">
+  <button class="stage-btn active" onclick="setStage('dormant')">⬡ DORMANT</button>
+  <button class="stage-btn" onclick="setStage('solving')">◈ SOLVING</button>
+  <button class="stage-btn" onclick="setStage('solved')">✦ SOLVED</button>
+</div>
+
+<!-- Domain tabs -->
+<div class="domain-tabs">
+  <button class="domain-tab active" onclick="setDomain('physics')">⚛ Physics</button>
+  <button class="domain-tab" onclick="setDomain('math')">➗ Math</button>
+  <button class="domain-tab" onclick="setDomain('chemistry')">🧪 Chemistry</button>
+</div>
+
+<!-- NFT Canvas -->
+<div class="nft-container">
+  <div class="nft-frame" id="nftFrame">
+    <canvas id="nftCanvas"></canvas>
+    <!-- HUD -->
+    <div class="hud-tl" id="hudTL">TOKEN #0042<br>GEN-1</div>
+    <div class="hud-tr" id="hudTR">DIFFICULTY<br><span id="diffLabel">EXPERT</span></div>
+    <div class="hud-bl" id="hudBL">STAGE: <span id="stageLabel">DORMANT</span></div>
+    <div class="hud-br" id="hudBR">DOMAIN<br><span id="domainLabel">PHYSICS</span></div>
+    <div class="hud-stage-label" id="stageOverlay"></div>
+  </div>
+</div>
+
+<!-- Info cards -->
+<div class="info-panel">
+  <div class="info-card">
+    <div class="label">Rarity</div>
+    <div class="value glow" id="rarityVal">LEGENDARY</div>
+  </div>
+  <div class="info-card">
+    <div class="label">Level</div>
+    <div class="value" id="levelVal">01</div>
+  </div>
+  <div class="info-card">
+    <div class="label">Evolution</div>
+    <div class="value" id="evoVal">0%</div>
+  </div>
+</div>
+
+<!-- Problem panel -->
+<div class="problem-panel">
+  <div class="problem-box">
+    <div class="problem-label">// ENCODED THEOREM — SUBMIT ANSWER TO EVOLVE</div>
+    <div class="problem-text" id="problemText">Loading encoded theorem...</div>
+    <div class="answer-row">
+      <input class="answer-input" id="answerInput" type="text" placeholder="Enter your answer...">
+      <button class="submit-btn" onclick="submitAnswer()">VERIFY</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="hint-row">
+      <div class="hint-pill" onclick="showHint(0)">HINT 01</div>
+      <div class="hint-pill" onclick="showHint(1)">HINT 02</div>
+      <div class="hint-pill" onclick="showHint(2)">SHOW ANSWER</div>
+    </div>
+    <div class="hint-text" id="hintText"></div>
+  </div>
+</div>
+
+<!-- Traits -->
+<div class="traits-panel">
+  <div class="traits-grid" id="traitsGrid">
+    <div class="trait-card"><div class="t-label">Domain</div><div class="t-value" id="t1">Physics</div></div>
+    <div class="trait-card"><div class="t-label">Equation</div><div class="t-value" id="t2">Schrödinger</div></div>
+    <div class="trait-card"><div class="t-label">Energy</div><div class="t-value" id="t3">Quantum</div></div>
+    <div class="trait-card"><div class="t-label">State</div><div class="t-value" id="t4">Dormant</div></div>
+    <div class="trait-card"><div class="t-label">Bg</div><div class="t-value" id="t5">Void</div></div>
+    <div class="trait-card"><div class="t-label">Particles</div><div class="t-value" id="t6">Scattered</div></div>
+    <div class="trait-card"><div class="t-label">Aura</div><div class="t-value" id="t7">Glitched</div></div>
+    <div class="trait-card"><div class="t-label">Symbol</div><div class="t-value" id="t8">ψ(x,t)</div></div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+
+const DOMAINS = {
+  physics: {
+    label: 'PHYSICS',
+    symbol: 'ψ(x,t)',
+    equation: 'Schrödinger',
+    energy: 'Quantum',
+    problem: 'A particle in a 1D infinite square well has width L.\nWhat is the ground-state energy E₁ in terms of ℏ, m, and L?\n\nGive the formula: E₁ = ?',
+    answer: ['pi2h2/2ml2', 'pi^2h^2/2ml^2', 'ℏ²π²/2mL²', 'pi2hbar2/2mL2', 'h2pi2/2ml2'],
+    answerDisplay: 'E₁ = π²ℏ²/(2mL²)',
+    hints: [
+      'Think about the de Broglie wavelength fitting into the well.',
+      'The wave vector k = nπ/L for n=1 (ground state). E = ℏ²k²/2m',
+      'E₁ = π²ℏ²/(2mL²)'
+    ],
+    traits: ['Physics', 'Schrödinger', 'Quantum', null, 'Void', 'Scattered', 'Glitched', 'ψ(x,t)'],
+    particleColor: [100, 80, 220],
+    glowColor: '#7b2d8b',
+    solvedColor: '#9b30ff',
+  },
+  math: {
+    label: 'MATHEMATICS',
+    symbol: '∫∂Ω',
+    equation: 'Euler Identity',
+    energy: 'Infinite',
+    problem: 'Evaluate the definite integral:\n∫₀^∞ x·e^(−x) dx\n\nHint: Integrate by parts, or use the Gamma function.',
+    answer: ['1', '1.0', 'gamma(2)', 'Γ(2)'],
+    answerDisplay: '∫₀^∞ x·e^(−x) dx = 1',
+    hints: [
+      'Use integration by parts: ∫u dv = uv − ∫v du',
+      'Let u = x, dv = e^(−x)dx. Then du = dx, v = −e^(−x)',
+      'Result = [−xe^(−x)]₀^∞ + ∫₀^∞ e^(−x)dx = 0 + 1 = 1'
+    ],
+    traits: ['Mathematics', 'Gamma Fn', 'Infinite', null, 'Grid', 'Matrices', 'Spectral', '∫∂Ω'],
+    particleColor: [40, 200, 120],
+    glowColor: '#20c875',
+    solvedColor: '#00ff88',
+  },
+  chemistry: {
+    label: 'CHEMISTRY',
+    symbol: 'ΔG°',
+    equation: 'Gibbs Free',
+    energy: 'Thermodynamic',
+    problem: 'Given:\n  ΔH° = −286 kJ/mol\n  ΔS° = −163 J/(mol·K)\n  T = 298 K\n\nCalculate ΔG° in kJ/mol.\nUse ΔG° = ΔH° − TΔS°',
+    answer: ['-237', '−237', '-237.0', '-237 kj', '-237kj/mol'],
+    answerDisplay: 'ΔG° = −237 kJ/mol',
+    hints: [
+      'Convert ΔS° to kJ: −163 J/mol·K = −0.163 kJ/mol·K',
+      'TΔS° = 298 × (−0.163) = −48.574 kJ/mol',
+      'ΔG° = −286 − (−48.574) = −237.4 ≈ −237 kJ/mol'
+    ],
+    traits: ['Chemistry', 'Gibbs Free', 'Thermal', null, 'Lab', 'Molecules', 'Reactive', 'ΔG°'],
+    particleColor: [255, 140, 0],
+    glowColor: '#ff8c00',
+    solvedColor: '#ffcc00',
+  }
+};
+
+const STAGE_CONFIGS = {
+  dormant: { label: 'DORMANT', evo: '0%', level: '01' },
+  solving: { label: 'SOLVING', evo: '47%', level: '02' },
+  solved:  { label: 'SOLVED',  evo: '100%', level: '03' }
+};
+
+let currentStage = 'dormant';
+let currentDomain = 'physics';
+let animFrame = null;
+let particles = [];
+let equations = [];
+let time = 0;
+let hintIndex = -1;
+
+// ─── CANVAS ENGINE ─────────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('nftCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const frame = document.getElementById('nftFrame');
+  const size = frame.clientWidth;
+  canvas.width = size;
+  canvas.height = size;
+}
+
+function initParticles() {
+  const W = canvas.width;
+  const H = canvas.height;
+  const d = DOMAINS[currentDomain];
+  particles = [];
+
+  const count = currentStage === 'dormant' ? 40 :
+                currentStage === 'solving' ? 80 : 120;
+
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * (currentStage === 'dormant' ? 0.3 : currentStage === 'solving' ? 0.8 : 0.5),
+      vy: (Math.random() - 0.5) * (currentStage === 'dormant' ? 0.3 : currentStage === 'solving' ? 0.8 : 0.5),
+      size: Math.random() * (currentStage === 'solved' ? 4 : 2.5) + 0.5,
+      alpha: Math.random() * 0.7 + 0.1,
+      phase: Math.random() * Math.PI * 2,
+      color: d.particleColor
+    });
+  }
+}
+
+function initEquations() {
+  const W = canvas.width;
+  const H = canvas.height;
+  const labels = getEquationLabels();
+  equations = labels.map((txt, i) => ({
+    text: txt,
+    x: 0.15 * W + Math.random() * 0.7 * W,
+    y: 0.15 * H + Math.random() * 0.7 * H,
+    alpha: currentStage === 'dormant' ? 0.08 + Math.random() * 0.12 :
+           currentStage === 'solving' ? 0.2 + Math.random() * 0.3 :
+                                        0.4 + Math.random() * 0.4,
+    size: Math.random() * 8 + (currentStage === 'solved' ? 11 : 8),
+    vx: (Math.random() - 0.5) * 0.2,
+    vy: (Math.random() - 0.5) * 0.2,
+    phase: Math.random() * Math.PI * 2,
+    glitch: currentStage === 'dormant'
+  }));
+}
+
+function getEquationLabels() {
+  if (currentDomain === 'physics') return [
+    'ψ(x,t)', 'Ĥψ = Eψ', '∇²ψ', 'iℏ∂ψ/∂t', 'E=mc²',
+    '∫|ψ|²dx', 'p̂=-iℏ∇', 'ΔxΔp≥ℏ/2', 'k=nπ/L', 'E₁=ℏ²π²/2mL²'
+  ];
+  if (currentDomain === 'math') return [
+    '∫₀^∞', 'e^(iπ)+1=0', '∂²f/∂x²', 'Σnᵢ', '∮F·ds',
+    'det(A)', '∇×B', 'Γ(n)', '∂/∂t', 'lim→∞'
+  ];
+  return [
+    'ΔG°', 'ΔH-TΔS', 'K_eq', 'mol/L', 'pH=-log[H⁺]',
+    'PV=nRT', 'E_cell', 'ΔS°', 'Kₚ=Kc(RT)^Δn', 'ΔG=-nFE'
+  ];
+}
+
+// ─── DRAW ──────────────────────────────────────────────────────────────────────
+
+function draw() {
+  const W = canvas.width;
+  const H = canvas.height;
+  const d = DOMAINS[currentDomain];
+  const [r, g, b] = d.particleColor;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background gradient per stage
+  const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W * 0.7);
+  if (currentStage === 'dormant') {
+    bg.addColorStop(0, '#0e0520');
+    bg.addColorStop(1, '#030010');
+  } else if (currentStage === 'solving') {
+    bg.addColorStop(0, '#030a1a');
+    bg.addColorStop(0.6, '#020510');
+    bg.addColorStop(1, '#010310');
+  } else {
+    bg.addColorStop(0, '#001428');
+    bg.addColorStop(0.6, '#000e20');
+    bg.addColorStop(1, '#000510');
+  }
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid lines
+  drawGrid(W, H, r, g, b);
+
+  // Energy orb (center)
+  drawOrb(W, H, r, g, b);
+
+  // Equations
+  equations.forEach(eq => drawEquation(eq, r, g, b));
+
+  // Particles
+  particles.forEach(p => drawParticle(p));
+
+  // Wave ring (solving/solved)
+  if (currentStage !== 'dormant') drawWaveRing(W, H, r, g, b);
+
+  // Glitch overlay (dormant)
+  if (currentStage === 'dormant' && Math.random() < 0.015) drawGlitch(W, H);
+
+  // Solved — connection lines
+  if (currentStage === 'solved') drawConnections(r, g, b);
+
+  // Update
+  updateEntities(W, H);
+  time += 0.016;
+
+  animFrame = requestAnimationFrame(draw);
+}
+
+function drawGrid(W, H, r, g, b) {
+  const alpha = currentStage === 'dormant' ? 0.04 :
+                currentStage === 'solving' ? 0.08 : 0.12;
+  ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+  ctx.lineWidth = 0.5;
+  const step = W / 12;
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+}
+
+function drawOrb(W, H, r, g, b) {
+  const cx = W / 2, cy = H / 2;
+  const pulse = Math.sin(time * 1.5) * 0.15 + 1;
+  const base = currentStage === 'dormant' ? W * 0.12 :
+               currentStage === 'solving' ? W * 0.17 : W * 0.22;
+  const radius = base * pulse;
+
+  // Outer halo
+  const halo = ctx.createRadialGradient(cx, cy, radius * 0.5, cx, cy, radius * 2.5);
+  const ha = currentStage === 'dormant' ? 0.06 :
+             currentStage === 'solving' ? 0.12 : 0.18;
+  halo.addColorStop(0, `rgba(${r},${g},${b},${ha})`);
+  halo.addColorStop(1, 'transparent');
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(cx, cy, radius * 2.5, 0, Math.PI * 2); ctx.fill();
+
+  // Core
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+  if (currentStage === 'dormant') {
+    grad.addColorStop(0, `rgba(${r},${g},${b},0.6)`);
+    grad.addColorStop(0.5, `rgba(${r},${g},${b},0.2)`);
+    grad.addColorStop(1, 'transparent');
+  } else if (currentStage === 'solving') {
+    grad.addColorStop(0, `rgba(255,255,255,0.9)`);
+    grad.addColorStop(0.3, `rgba(${r},${g},${b},0.7)`);
+    grad.addColorStop(1, 'transparent');
+  } else {
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.2, `rgba(${r},${g},${b},0.9)`);
+    grad.addColorStop(0.7, `rgba(${r},${g},${b},0.3)`);
+    grad.addColorStop(1, 'transparent');
+  }
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
+
+  // Symbol in center
+  const d = DOMAINS[currentDomain];
+  const symAlpha = currentStage === 'dormant' ? 0.2 :
+                   currentStage === 'solving' ? 0.6 : 1.0;
+  ctx.fillStyle = `rgba(255,255,255,${symAlpha})`;
+  ctx.font = `${W * 0.055}px 'Share Tech Mono'`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if (currentStage === 'solved') {
+    ctx.shadowColor = d.solvedColor;
+    ctx.shadowBlur = 20;
+  }
+  ctx.fillText(d.symbol, cx, cy);
+  ctx.shadowBlur = 0;
+}
+
+function drawEquation(eq, r, g, b) {
+  const flicker = currentStage === 'dormant' ? (Math.sin(time * 3 + eq.phase) > 0.2 ? 1 : 0.3) : 1;
+  const bob = Math.sin(time * 0.8 + eq.phase) * 3;
+
+  ctx.fillStyle = `rgba(${r},${g},${b},${eq.alpha * flicker})`;
+  ctx.font = `${eq.size}px 'Share Tech Mono'`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+
+  if (currentStage === 'solved') {
+    ctx.shadowColor = `rgba(${r},${g},${b},0.8)`;
+    ctx.shadowBlur = 8;
+  }
+  ctx.fillText(eq.text, eq.x, eq.y + bob);
+  ctx.shadowBlur = 0;
+
+  if (eq.glitch && Math.random() < 0.02) {
+    ctx.fillStyle = `rgba(255,50,100,0.3)`;
+    ctx.fillText(eq.text, eq.x + 3, eq.y + bob);
+  }
+}
+
+function drawParticle(p) {
+  const [r, g, b] = p.color;
+  const pulse = Math.sin(time * 2 + p.phase) * 0.3 + 0.7;
+  ctx.fillStyle = `rgba(${r},${g},${b},${p.alpha * pulse})`;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (currentStage === 'solved') {
+    ctx.fillStyle = `rgba(255,255,255,${p.alpha * 0.4 * pulse})`;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawWaveRing(W, H, r, g, b) {
+  const cx = W / 2, cy = H / 2;
+  const rings = currentStage === 'solving' ? 3 : 5;
+  for (let i = 0; i < rings; i++) {
+    const t2 = (time * 0.4 + i / rings) % 1;
+    const rad = t2 * W * 0.5;
+    const alpha = (1 - t2) * (currentStage === 'solving' ? 0.15 : 0.25);
+    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+    ctx.lineWidth = currentStage === 'solved' ? 1.5 : 1;
+    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.stroke();
+  }
+}
+
+function drawConnections(r, g, b) {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 70) {
+        ctx.strokeStyle = `rgba(${r},${g},${b},${(1 - dist/70) * 0.15})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function drawGlitch(W, H) {
+  const y = Math.random() * H;
+  const h = Math.random() * 10 + 2;
+  ctx.fillStyle = 'rgba(120,0,255,0.04)';
+  ctx.fillRect(0, y, W, h);
+  ctx.fillStyle = 'rgba(0,200,255,0.04)';
+  ctx.fillRect(4, y + 2, W, h);
+}
+
+function updateEntities(W, H) {
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = W;
+    if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H;
+    if (p.y > H) p.y = 0;
+  });
+  equations.forEach(eq => {
+    eq.x += eq.vx;
+    eq.y += eq.vy;
+    if (eq.x < 20) eq.vx = Math.abs(eq.vx);
+    if (eq.x > W - 80) eq.vx = -Math.abs(eq.vx);
+    if (eq.y < 20) eq.vy = Math.abs(eq.vy);
+    if (eq.y > H - 20) eq.vy = -Math.abs(eq.vy);
+  });
+}
+
+// ─── UI UPDATES ────────────────────────────────────────────────────────────────
+
+function setStage(stage) {
+  currentStage = stage;
+  updateUI();
+
+  document.querySelectorAll('.stage-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', ['dormant','solving','solved'][i] === stage);
+  });
+}
+
+function setDomain(domain) {
+  currentDomain = domain;
+  hintIndex = -1;
+  document.getElementById('hintText').textContent = '';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('answerInput').value = '';
+
+  document.querySelectorAll('.domain-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(domain.substring(0,3)));
+  });
+
+  updateUI();
+}
+
+function updateUI() {
+  const d = DOMAINS[currentDomain];
+  const sc = STAGE_CONFIGS[currentStage];
+
+  // Glow color on frame
+  document.getElementById('nftFrame').style.setProperty('--glow-color', d.glowColor);
+  document.getElementById('nftFrame').style.borderColor = d.glowColor + '55';
+
+  // HUD
+  document.getElementById('stageLabel').textContent = sc.label;
+  document.getElementById('domainLabel').textContent = d.label;
+  document.getElementById('diffLabel').textContent = 'EXPERT';
+
+  // Info cards
+  document.getElementById('evoVal').textContent = sc.evo;
+  document.getElementById('levelVal').textContent = sc.level;
+
+  // Stage overlay text
+  const overlay = document.getElementById('stageOverlay');
+  if (currentStage === 'dormant') {
+    overlay.style.color = 'rgba(120,80,180,0.15)';
+    overlay.style.fontSize = 'clamp(2rem,8vw,5rem)';
+    overlay.textContent = '?';
+    overlay.style.textShadow = '0 0 40px rgba(120,80,180,0.3)';
+  } else if (currentStage === 'solving') {
+    overlay.textContent = '';
+  } else {
+    overlay.textContent = '';
+  }
+
+  // Problem
+  document.getElementById('problemText').textContent = d.problem;
+
+  // Traits
+  const traits = d.traits;
+  const stateMap = { dormant: 'Dormant', solving: 'Solving', solved: 'Solved' };
+  const bgMap = { dormant: 'Void', solving: 'Nebula', solved: 'Aurora' };
+  const auraMap = { dormant: 'Glitched', solving: 'Unstable', solved: 'Radiant' };
+  document.getElementById('t1').textContent = traits[0];
+  document.getElementById('t2').textContent = traits[1];
+  document.getElementById('t3').textContent = traits[2];
+  document.getElementById('t4').textContent = stateMap[currentStage];
+  document.getElementById('t5').textContent = bgMap[currentStage];
+  document.getElementById('t6').textContent = currentStage === 'solved' ? 'Crystalline' : traits[5];
+  document.getElementById('t7').textContent = auraMap[currentStage];
+  document.getElementById('t8').textContent = traits[7];
+
+  // Reinit scene
+  if (animFrame) cancelAnimationFrame(animFrame);
+  resizeCanvas();
+  initParticles();
+  initEquations();
+  draw();
+}
+
+function submitAnswer() {
+  const input = document.getElementById('answerInput').value.trim().toLowerCase()
+    .replace(/\s+/g, '').replace(/−/g, '-');
+  const d = DOMAINS[currentDomain];
+  const accepted = d.answer.map(a => a.toLowerCase().replace(/\s+/g,'').replace(/−/g,'-'));
+  const fb = document.getElementById('feedback');
+
+  if (accepted.some(a => input.includes(a) || a.includes(input) && input.length > 1)) {
+    fb.textContent = '✓ CORRECT — NFT EVOLVED TO SOLVED STATE';
+    fb.className = 'feedback right';
+    setStage('solved');
+    document.querySelectorAll('.stage-btn')[2].click();
+  } else if (input.length === 0) {
+    fb.textContent = '⚠ Enter an answer first.';
+    fb.className = 'feedback wrong';
+  } else {
+    const messages = [
+      '✗ INCORRECT — Theorem remains unsolved.',
+      '✗ WRONG — The equations resist you.',
+      '✗ ERROR — Re-examine your derivation.',
+      '✗ INVALID — Try a different approach.'
+    ];
+    fb.textContent = messages[Math.floor(Math.random() * messages.length)];
+    fb.className = 'feedback wrong';
+  }
+}
+
+function showHint(i) {
+  const d = DOMAINS[currentDomain];
+  document.getElementById('hintText').textContent = `▸ ${d.hints[i]}`;
+  if (i === 2) {
+    document.getElementById('hintText').textContent = `✦ ANSWER: ${d.answerDisplay}`;
+  }
+  setStage(i === 0 ? 'dormant' : 'solving');
+}
+
+// ─── INPUT ─────────────────────────────────────────────────────────────────────
+document.getElementById('answerInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitAnswer();
+});
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  initParticles();
+  initEquations();
+});
+
+resizeCanvas();
+updateUI();
+</script>
+</body>
+</html>
